@@ -11,32 +11,27 @@ import java.util.Map;
 import static com.moove.api.queries.CattleDeviceIdQueries.updateCattleItemAttributes;
 import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
 
-public class SendLocation {
+public class SendCoordinateLimits {
 
     public String handleRequest(APIGatewayV2HTTPEvent event, Context context) {
         LambdaLogger logger = context.getLogger();
-
         AmazonDynamoDB amazonDynamoDB = getAmazonDynamoDBClient();
-
-        String deviceId;
-        String latitude;
-        String longitude;
-
-        boolean isCattleItemUpdated = false;
+        boolean isLimitsStored = false;
 
         if (event.getQueryStringParameters() != null) {
+            Map<String, String> parameters = event.getQueryStringParameters();
 
-            Map<String, String> requestParameters = event.getQueryStringParameters();
+            String deviceId = parameters.get(DynamoUtils.DEVICE_ID).trim();
+            String latitude = parameters.get(DynamoUtils.LATITUDE).trim();
+            String longitude = parameters.get(DynamoUtils.LONGITUDE).trim();
 
-            deviceId = requestParameters.get(DynamoUtils.DEVICE_ID).trim();
-            latitude = requestParameters.get(DynamoUtils.LATITUDE).trim();
-            longitude = requestParameters.get(DynamoUtils.LONGITUDE).trim();
-
-            isCattleItemUpdated = updateCattleItemAttributes(amazonDynamoDB, deviceId, latitude, longitude, logger);
-        } else {
-            logger.log("QueryString Parameters are null");
+            if (deviceId.equals(String.valueOf(0))) {
+                isLimitsStored = updateCattleItemAttributes(amazonDynamoDB, deviceId, latitude, longitude, logger);
+            } else {
+                logger.log("Incorrect deviceId, can not store coordinate limits");
+            }
         }
-        logger.log("Cattle Item has been added to DDB Streams table: " + isCattleItemUpdated);
+        logger.log("Coordinates Limits added to cattle-herding table: " + isLimitsStored);
         amazonDynamoDB.shutdown();
         return "success\n";
     }
