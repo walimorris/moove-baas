@@ -13,10 +13,12 @@ import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
 
 public class SendLocation {
 
+    private static final String REGION = System.getenv("region");
+
     public String handleRequest(APIGatewayV2HTTPEvent event, Context context) {
         LambdaLogger logger = context.getLogger();
 
-        AmazonDynamoDB amazonDynamoDB = getAmazonDynamoDBClient();
+        AmazonDynamoDB amazonDynamoDB = getAmazonDynamoDBClient(REGION);
 
         String deviceId;
         String latitude;

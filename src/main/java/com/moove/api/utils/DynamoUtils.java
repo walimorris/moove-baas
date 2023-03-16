@@ -1,7 +1,6 @@
 package com.moove.api.utils;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreams;
@@ -9,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 
 public class DynamoUtils {
 
+    public static final String LIMITS_ID = "0";
     public static final String DEVICE_ID = "deviceId";
     public static final String LATITUDE = "latitude";
     public static final String LONGITUDE = "longitude";
@@ -34,9 +34,9 @@ public class DynamoUtils {
      *
      * @return {@link AmazonDynamoDB} client
      */
-    public static AmazonDynamoDB getAmazonDynamoDBClient() {
+    public static AmazonDynamoDB getAmazonDynamoDBClient(String region) {
         return AmazonDynamoDBClientBuilder.standard()
-                .withRegion(Regions.US_WEST_2)
+                .withRegion(region)
                 .withClientConfiguration(dynamoClientConfiguration())
                 .build();
     }
@@ -56,5 +56,13 @@ public class DynamoUtils {
         return new DynamoDBMapperConfig.Builder()
                 .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.PUT)
                 .build();
+    }
+
+    public static double convertCoordinateToDouble(String coordinate) {
+        return Double.parseDouble(coordinate);
+    }
+
+    public static String stripDecor(String str) {
+        return str.substring(3, str.length() - 2).trim();
     }
 }
