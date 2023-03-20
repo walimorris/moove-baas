@@ -20,9 +20,17 @@ public class SendLocation {
 
         AmazonDynamoDB amazonDynamoDB = getAmazonDynamoDBClient(REGION);
 
+        // properties from POST request
+        String herdId;
         String deviceId;
         String latitude;
         String longitude;
+
+        // created properties to build device items in herd partion
+        long ttl;
+        String status = "in";
+        String gsi1pk;
+        String gsi1sk = DynamoUtils.getTimeStamp();
 
         boolean isCattleItemUpdated = false;
 
@@ -30,9 +38,13 @@ public class SendLocation {
 
             Map<String, String> requestParameters = event.getQueryStringParameters();
 
+            herdId = requestParameters.get(DynamoUtils.HERD_ID).trim();
             deviceId = requestParameters.get(DynamoUtils.DEVICE_ID).trim();
             latitude = requestParameters.get(DynamoUtils.LATITUDE).trim();
             longitude = requestParameters.get(DynamoUtils.LONGITUDE).trim();
+
+            // set gsipk tp deviceId
+            gsi1pk = deviceId;
 
             isCattleItemUpdated = updateCattleItemAttributes(amazonDynamoDB, deviceId, latitude, longitude, logger);
         } else {

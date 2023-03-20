@@ -6,9 +6,14 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreams;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class DynamoUtils {
 
     public static final String LIMITS_ID = "0";
+    public static final String HERD_ID = "herdId";
     public static final String DEVICE_ID = "deviceId";
     public static final String LATITUDE = "latitude";
     public static final String LONGITUDE = "longitude";
@@ -64,5 +69,11 @@ public class DynamoUtils {
 
     public static String stripDecor(String str) {
         return str.substring(3, str.length() - 2).trim();
+    }
+
+    public static String getTimeStamp() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        Date date = new Date();
+        return dateFormat.format(date.getTime());
     }
 }
