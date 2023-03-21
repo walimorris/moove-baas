@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.moove.api.utils.DynamoUtils.getSkipUpdateNullAttributesMapperConfig;
+
 public class CattleDeviceIdQueries {
 
     public static Device getDeviceItemByDeviceIndex(AmazonDynamoDB amazonDynamoDB, String gsi1pk, String gsi1sk, LambdaLogger logger) {
@@ -61,14 +63,35 @@ public class CattleDeviceIdQueries {
         Map<String, List<String>> coordinates = new HashMap<>();
         coordinates.put("coordinateLimits", coordinateLimits);
 
-        herdMetaDataLimits.setHerdId(pk);
+        herdMetaDataLimits.setHerdId("HERD#" + pk);
         herdMetaDataLimits.setMetaKey("META");
         herdMetaDataLimits.setMetaDataLimits(coordinates);
 
         try {
-            mapper.save(herdMetaDataLimits);
+            mapper.save(herdMetaDataLimits, getSkipUpdateNullAttributesMapperConfig());
         } catch(Exception e) {
             logger.log("Error Putting coordinate limits on herdId: " + pk);
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean putHerdMetaData(AmazonDynamoDB amazonDynamoDB, LambdaLogger logger, String herdId, String timestamp) {
+        DynamoDBMapper mapper = new DynamoDBMapper(amazonDynamoDB);
+
+        HerdMetaData herdMetaData = new HerdMetaData();
+
+        Map<String, String> metaData = new HashMap<>();
+        metaData.put("latestTimestamp", timestamp);
+
+        herdMetaData.setHerdId(herdId);
+        herdMetaData.setMetaKey("META");
+        herdMetaData.setMetaData(metaData);
+
+        try {
+            mapper.save(herdMetaData, getSkipUpdateNullAttributesMapperConfig());
+        } catch (Exception e) {
+            logger.log("Error putting metadata on herdId: " + herdId);
             return false;
         }
         return true;

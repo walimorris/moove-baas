@@ -9,6 +9,7 @@ import com.moove.api.utils.DynamoUtils;
 import java.util.Map;
 
 import static com.moove.api.queries.CattleDeviceIdQueries.putDeviceItem;
+import static com.moove.api.queries.CattleDeviceIdQueries.putHerdMetaData;
 import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
 import static com.moove.api.utils.DynamoUtils.getTTL;
 
@@ -28,6 +29,7 @@ public class SendLocation {
         String gsi1sk = DynamoUtils.getTimeStamp();
 
         boolean isCattleItemUpdated = false;
+        boolean isLatestTTL = false;
 
         if (event.getQueryStringParameters() != null) {
 
@@ -45,10 +47,12 @@ public class SendLocation {
 
             isCattleItemUpdated = putDeviceItem(amazonDynamoDB, herdId, deviceId, latitude, longitude,
                     ttl, status, gsi1pk, gsi1sk, logger);
+            isLatestTTL = putHerdMetaData(amazonDynamoDB, logger, herdId, gsi1sk);
         } else {
             logger.log("QueryString Parameters are null");
         }
         logger.log("Cattle Item has been added to DDB Streams table: " + isCattleItemUpdated);
+        logger.log("Latest TTL has been added to metadata: " + isLatestTTL);
         amazonDynamoDB.shutdown();
         return "success\n";
     }
