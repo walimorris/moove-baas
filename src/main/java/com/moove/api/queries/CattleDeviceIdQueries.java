@@ -2,85 +2,74 @@ package com.moove.api.queries;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
-import com.moove.api.models.CattleItem;
+import com.moove.api.models.Device;
+import com.moove.api.models.HerdMetaData;
 
-import static com.moove.api.utils.DynamoUtils.getPutItemMapperConfig;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CattleDeviceIdQueries {
 
-    /**
-     * Queries a AmazonDynamoDB Table for a {@link CattleItem} and returns the item, otherwise returns
-     * a {@link CattleItem} that is capable of setting the attribute values on the object.
-     *
-     * @param amazonDynamoDB {@link AmazonDynamoDB}
-     * @param deviceId cattle deviceId
-     * @param logger {@link LambdaLogger}
-     *
-     * @see CattleItem
-     *
-     * @return {@link CattleItem}
-     */
-    public static CattleItem queryCattleItemByDeviceId(AmazonDynamoDB amazonDynamoDB, String deviceId, LambdaLogger logger) {
+    public static Device getDeviceItemByDeviceIndex(AmazonDynamoDB amazonDynamoDB, String gsi1pk, String gsi1sk, LambdaLogger logger) {
         DynamoDBMapper mapper = new DynamoDBMapper(amazonDynamoDB);
 
-        CattleItem cattleItem = new CattleItem();
-        cattleItem.setDeviceId(Integer.parseInt(deviceId));
-
-        DynamoDBQueryExpression<CattleItem> queryExpression = new DynamoDBQueryExpression<CattleItem>()
-                .withConsistentRead(false)
-                .withHashKeyValues(cattleItem);
+        Device deviceItem = new Device();
+        deviceItem.setGsi1pk(gsi1pk);
+        deviceItem.setGsi1sk(gsi1sk);
 
         try {
-            return mapper.query(CattleItem.class, queryExpression).get(0);
+            return mapper.load(Device.class, deviceItem);
         } catch (Exception e) {
-
-            /*
-            Return a CattleItem Object if the queried Item is not found on the cattle-herd table.
-            This signifies that the Item doesn't exist and allows us to create it from this empty
-            CattleItem object
-             */
-            logger.log("Error querying " + deviceId + " on the " + "cattle-herd. Attempting to build Item.");
-            return new CattleItem();
+            logger.log("Error on GetItem for device item with id: " + gsi1pk);
         }
+        return null;
     }
 
-    public static boolean updateCattleItemAttributes(AmazonDynamoDB amazonDynamoDB, String deviceId, String latitude,
-                                              String longitude, LambdaLogger logger) {
+    public static boolean putDeviceItem(AmazonDynamoDB amazonDynamoDB, String herdId, String deviceId, String latitude, String longitude,
+                                                     long ttl, String status, String gsi1pk, String gsi1sk, LambdaLogger logger) {
+        Device deviceItem = new Device();
+        deviceItem.setHerdId(herdId);
+        deviceItem.setDeviceId(deviceId);
+        deviceItem.setLatitude(latitude);
+        deviceItem.setLongitude(longitude);
+        deviceItem.setTtl(ttl);
+        deviceItem.setStatus(status);
+        deviceItem.setGsi1pk(gsi1pk);
+        deviceItem.setGsi1sk(gsi1sk);
 
         DynamoDBMapper mapper = new DynamoDBMapper(amazonDynamoDB);
-        CattleItem cattleItemResult = queryCattleItemByDeviceId(amazonDynamoDB, deviceId, logger);
 
-        // Received a hit on a CattleItem with the given deviceId
-        if (cattleItemResult.getDeviceId() != -1) {
-            cattleItemResult.setLatitude(latitude);
-            cattleItemResult.setLongitude(longitude);
-            try {
-                mapper.save(cattleItemResult);
-            } catch (Exception e) {
-                logger.log("Error updating Cattle Item with device id " + deviceId + ": " + e.getMessage());
-                return false;
-            }
-            // Didn't get a CattleItem hit, item isn't in table
-            // Add given attribute properties to Put new CattleItem
-        } else {
-            if (String.valueOf(deviceId).equals("0")) {
-                cattleItemResult.setDeviceId(Integer.parseInt(deviceId));
-            } else {
-                cattleItemResult.setDeviceId(Integer.parseInt(deviceId));
-            }
-            cattleItemResult.setLatitude(latitude);
-            cattleItemResult.setLongitude(longitude);
+        try {
+            mapper.save(deviceItem);
+        } catch (Exception e) {
+            logger.log("Error on Cattle Table PutItem with device id " + deviceId + ": " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
 
-            try {
-                // Need to add DynamoDBMapper configuration save behavior because the default save behavior
-                // is an UpdateItem request on DynamoDB Table
-                mapper.save(cattleItemResult, getPutItemMapperConfig());
-            } catch (Exception e) {
-                logger.log("Error putting Cattle Item with device id " + deviceId + ": " + e.getMessage());
-                return false;
-            }
+    public static boolean putHerdMetaDataLimits(AmazonDynamoDB amazonDynamoDB, LambdaLogger logger, String pk, ArrayList<String>
+            coordinateLimits) {
+
+        DynamoDBMapper mapper = new DynamoDBMapper(amazonDynamoDB);
+
+        HerdMetaData herdMetaDataLimits = new HerdMetaData();
+
+        Map<String, List<String>> coordinates = new HashMap<>();
+        coordinates.put("coordinateLimits", coordinateLimits);
+
+        herdMetaDataLimits.setHerdId(pk);
+        herdMetaDataLimits.setMetaKey("META");
+        herdMetaDataLimits.setMetaDataLimits(coordinates);
+
+        try {
+            mapper.save(herdMetaDataLimits);
+        } catch(Exception e) {
+            logger.log("Error Putting coordinate limits on herdId: " + pk);
+            return false;
         }
         return true;
     }

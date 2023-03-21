@@ -8,6 +8,8 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 public class DynamoUtils {
@@ -75,5 +77,9 @@ public class DynamoUtils {
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
         Date date = new Date();
         return dateFormat.format(date.getTime());
+    }
+
+    public static long getTTL(int days) {
+        return Instant.now().plus(days, ChronoUnit.DAYS).getEpochSecond();
     }
 }

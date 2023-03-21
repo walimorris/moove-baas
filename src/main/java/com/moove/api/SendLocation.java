@@ -8,8 +8,9 @@ import com.moove.api.utils.DynamoUtils;
 
 import java.util.Map;
 
-import static com.moove.api.queries.CattleDeviceIdQueries.updateCattleItemAttributes;
+import static com.moove.api.queries.CattleDeviceIdQueries.putDeviceItem;
 import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
+import static com.moove.api.utils.DynamoUtils.getTTL;
 
 public class SendLocation {
 
@@ -20,14 +21,8 @@ public class SendLocation {
 
         AmazonDynamoDB amazonDynamoDB = getAmazonDynamoDBClient(REGION);
 
-        // properties from POST request
-        String herdId;
-        String deviceId;
-        String latitude;
-        String longitude;
-
-        // created properties to build device items in herd partion
-        long ttl;
+        // created properties to build device items in herd partition
+        long ttl = getTTL(30);
         String status = "in";
         String gsi1pk;
         String gsi1sk = DynamoUtils.getTimeStamp();
@@ -38,15 +33,18 @@ public class SendLocation {
 
             Map<String, String> requestParameters = event.getQueryStringParameters();
 
-            herdId = requestParameters.get(DynamoUtils.HERD_ID).trim();
-            deviceId = requestParameters.get(DynamoUtils.DEVICE_ID).trim();
-            latitude = requestParameters.get(DynamoUtils.LATITUDE).trim();
-            longitude = requestParameters.get(DynamoUtils.LONGITUDE).trim();
+            String herdId = requestParameters.get(DynamoUtils.HERD_ID).trim();
+            String deviceId = requestParameters.get(DynamoUtils.DEVICE_ID).trim();
+            String latitude = requestParameters.get(DynamoUtils.LATITUDE).trim();
+            String longitude = requestParameters.get(DynamoUtils.LONGITUDE).trim();
 
             // set gsipk tp deviceId
             gsi1pk = deviceId;
+            deviceId = gsi1sk + "#" + deviceId;
+            herdId = "HERD#" + herdId;
 
-            isCattleItemUpdated = updateCattleItemAttributes(amazonDynamoDB, deviceId, latitude, longitude, logger);
+            isCattleItemUpdated = putDeviceItem(amazonDynamoDB, herdId, deviceId, latitude, longitude,
+                    ttl, status, gsi1pk, gsi1sk, logger);
         } else {
             logger.log("QueryString Parameters are null");
         }
