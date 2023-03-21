@@ -28,6 +28,15 @@ public class SendCoordinateLimits {
         return "success\n";
     }
 
+    /**
+     * Collects {@link ArrayList} of coordinate limits from user geofence creation stored in
+     * Json string format. Coordinate limits are in longitude,latitude order in pairs of two.
+     *
+     * @param coordinatesJSON list of coordinate limits in json string format
+     * @param logger {@link LambdaLogger}
+     *
+     * @return {@link ArrayList} of coordinate limits
+     */
     private static ArrayList<String> collectCoordinates(String coordinatesJSON, LambdaLogger logger) {
         JSONObject coordinatesJson = new JSONObject(coordinatesJSON);
         JSONArray coordinatesArray = coordinatesJson.getJSONArray("coordinatesArray");
@@ -40,14 +49,33 @@ public class SendCoordinateLimits {
         return coordinates;
     }
 
+    /**
+     * Get herdId sent from incoming API request event.
+     *
+     * @param event {@link APIGatewayV2HTTPEvent} incoming request event
+     * @param logger {@link LambdaLogger}
+     *
+     * @return {@link String} herdId
+     */
     private static String collectHerdIdQueryParameter(APIGatewayV2HTTPEvent event, LambdaLogger logger) {
         return event.getQueryStringParameters().get("herdId");
     }
 
+    /**
+     * Sends a PutItem request on DynamoDB Table, putting the metaDataLimits attribute on
+     * the herdId partition it belongs to.
+     *
+     * @param event {@link APIGatewayV2HTTPEvent} incoming request
+     * @param amazonDynamoDB {@link AmazonDynamoDB}
+     * @param logger {@link LambdaLogger}
+     *
+     * @see com.moove.api.models.HerdMetaData
+     */
     private static void loadHerdMetaDataLimits(APIGatewayV2HTTPEvent event, AmazonDynamoDB amazonDynamoDB, LambdaLogger logger) {
         ArrayList<String> coordinates = collectCoordinates(event.getBody(), logger);
         String herdId = collectHerdIdQueryParameter(event, logger);
         if (herdId != null && !coordinates.isEmpty()) {
+
             // add metaDataLimits to DynamoDB partion with herdId
             boolean isMetaLimitsSaved = putHerdMetaDataLimits(amazonDynamoDB, logger, herdId, coordinates);
             if (isMetaLimitsSaved) {
