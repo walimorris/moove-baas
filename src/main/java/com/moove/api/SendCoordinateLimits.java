@@ -4,10 +4,13 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.moove.api.queries.CattleDeviceIdQueries.putHerdMetaDataLimits;
 import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
@@ -15,7 +18,7 @@ import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
 public class SendCoordinateLimits {
     private static final String REGION = System.getenv("region");
 
-    public String handleRequest(APIGatewayV2HTTPEvent event, Context context) {
+    public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent event, Context context) {
         LambdaLogger logger = context.getLogger();
         AmazonDynamoDB amazonDynamoDBClient = getAmazonDynamoDBClient(REGION);
 
@@ -25,7 +28,11 @@ public class SendCoordinateLimits {
             logger.log("Body is empty for SendCoordinateLimits");
         }
         amazonDynamoDBClient.shutdown();
-        return "success\n";
+
+        APIGatewayV2HTTPResponse response = new APIGatewayV2HTTPResponse();
+        response.setStatusCode(200);
+
+        return response;
     }
 
     /**
@@ -39,7 +46,7 @@ public class SendCoordinateLimits {
      */
     private static ArrayList<String> collectCoordinates(String coordinatesJSON, LambdaLogger logger) {
         JSONObject coordinatesJson = new JSONObject(coordinatesJSON);
-        JSONArray coordinatesArray = coordinatesJson.getJSONArray("coordinatesArray");
+        JSONArray coordinatesArray = coordinatesJson.getJSONArray("coordinates");
         ArrayList<String> coordinates = new ArrayList<>();
         for (Object obj : coordinatesArray) {
             String coordinate = String.valueOf(obj);

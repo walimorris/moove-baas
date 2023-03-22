@@ -4,8 +4,10 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import com.moove.api.utils.DynamoUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.moove.api.queries.CattleDeviceIdQueries.putDeviceItem;
@@ -17,7 +19,7 @@ public class SendLocation {
 
     private static final String REGION = System.getenv("region");
 
-    public String handleRequest(APIGatewayV2HTTPEvent event, Context context) {
+    public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent event, Context context) {
         LambdaLogger logger = context.getLogger();
 
         AmazonDynamoDB amazonDynamoDB = getAmazonDynamoDBClient(REGION);
@@ -54,6 +56,15 @@ public class SendLocation {
         logger.log("Cattle Item has been added to DDB Streams table: " + isCattleItemUpdated);
         logger.log("Latest TTL has been added to metadata: " + isLatestTTL);
         amazonDynamoDB.shutdown();
-        return "success\n";
+
+        APIGatewayV2HTTPResponse response = new APIGatewayV2HTTPResponse();
+        Map<String, String> headers = new HashMap<>();
+        response.setIsBase64Encoded(false);
+        response.setStatusCode(200);
+        headers.put("Content-Type", "application/json");
+        headers.put("Access-Control-Allow-Origin", "*");
+        response.setHeaders(headers);
+
+        return response;
     }
 }
