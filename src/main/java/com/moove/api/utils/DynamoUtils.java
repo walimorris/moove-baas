@@ -120,9 +120,12 @@ public class DynamoUtils {
      * @return {@link String}
      */
     public static String getTimeStamp() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         Date date = new Date();
-        return dateFormat.format(date.getTime());
+        String currentDate = dateFormat.format(date.getTime());
+        String currentTime = timeFormat.format(date.getTime());
+        return currentDate + "T" + currentTime;
     }
 
     /**
