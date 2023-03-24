@@ -1,5 +1,6 @@
 package com.moove.api.utils;
 
+import com.moove.api.models.Device;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -136,5 +137,31 @@ public class DynamoUtils {
      */
     public static long getTTL(int days) {
         return Instant.now().plus(days, ChronoUnit.DAYS).getEpochSecond();
+    }
+
+    /**
+     * Removes decor around returned dynamodb attribute values from table sort key
+     * and pulls the date. Sort Key Format Like: 2023-03-22T22:47:36#123456
+     *
+     * @param key sort key from {@link Device} table.
+     *
+     * @return {@link String}
+     * @see Device#getDeviceId()
+     */
+    public static String stripDateTimeSortKeyForDate(String key) {
+        return key.split("T")[0].trim();
+    }
+
+    /**
+     * Removes decor around returned dynamodb attribute values from table sort key
+     * and pulls the time. Sort Key Format Like: 2023-03-22T22:47:36#123456
+     *
+     * @param key sort key from {@link Device} table
+     *
+     * @return {@link String}
+     * @see Device#getDeviceId()
+     */
+    public static String stripDateTimeSortKeyForTime(String key) {
+        return key.split("T")[1].split("#")[0].trim();
     }
 }
