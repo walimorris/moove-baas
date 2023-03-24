@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.moove.api.models.Device;
 import com.moove.api.models.HerdMetaData;
+import com.moove.api.utils.DynamoUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,6 +16,16 @@ import static com.moove.api.utils.DynamoUtils.getSkipUpdateNullAttributesMapperC
 
 public class CattleDeviceIdQueries {
 
+    /**
+     * GetItem request on device using Global Secondary Index
+     *
+     * @param amazonDynamoDB {@link AmazonDynamoDB}
+     * @param gsi1pk global secondary index pk
+     * @param gsi1sk global secondary index sk
+     * @param logger {@link LambdaLogger}
+     *
+     * @return {@link Device}
+     */
     public static Device getDeviceItemByDeviceIndex(AmazonDynamoDB amazonDynamoDB, String gsi1pk, String gsi1sk, LambdaLogger logger) {
         DynamoDBMapper mapper = new DynamoDBMapper(amazonDynamoDB);
 
@@ -30,6 +41,22 @@ public class CattleDeviceIdQueries {
         return null;
     }
 
+    /**
+     * PutItem request on a {@link Device} entity.
+     *
+     * @param amazonDynamoDB {@link AmazonDynamoDB}
+     * @param herdId herd id the device belongs to. HERD#
+     * @param deviceId device id
+     * @param latitude latitude coordinate
+     * @param longitude longitude coordinate
+     * @param ttl time to live
+     * @param status status of the device (in/out) of geofence
+     * @param gsi1pk global secondary index partition key
+     * @param gsi1sk global secondary index sort key
+     * @param logger {@link LambdaLogger}
+     *
+     * @return boolean
+     */
     public static boolean putDeviceItem(AmazonDynamoDB amazonDynamoDB, String herdId, String deviceId, String latitude, String longitude,
                                                      long ttl, String status, String gsi1pk, String gsi1sk, LambdaLogger logger) {
         Device deviceItem = new Device();
@@ -53,6 +80,18 @@ public class CattleDeviceIdQueries {
         return true;
     }
 
+    /**
+     * PutItem request on herd meta-data item for the metaDataLimits attribute that contains
+     * a list of coordinates for geofence polygon.
+     *
+     * @param amazonDynamoDB {@link AmazonDynamoDB}
+     * @param logger {@link LambdaLogger}
+     * @param pk partition key on table (HERD#123)
+     * @param coordinateLimits list of coordinates for geofence polygon
+     *
+     * @return boolean
+     * @see DynamoUtils#getSkipUpdateNullAttributesMapperConfig()
+     */
     public static boolean putHerdMetaDataLimits(AmazonDynamoDB amazonDynamoDB, LambdaLogger logger, String pk, ArrayList<String>
             coordinateLimits) {
 
@@ -76,6 +115,18 @@ public class CattleDeviceIdQueries {
         return true;
     }
 
+    /**
+     * PutItem request on herd meta-data item for the metaData timestamp attribute that
+     * contains a timestamp for the latest device data added to the herd.
+     *
+     * @param amazonDynamoDB {@link AmazonDynamoDB}
+     * @param logger {@link LambdaLogger}
+     * @param herdId herdId (HERD#123) is the partition key
+     * @param timestamp time formatted string
+     *
+     * @return boolean
+     * @see DynamoUtils#getSkipUpdateNullAttributesMapperConfig()
+     */
     public static boolean putHerdMetaData(AmazonDynamoDB amazonDynamoDB, LambdaLogger logger, String herdId, String timestamp) {
         DynamoDBMapper mapper = new DynamoDBMapper(amazonDynamoDB);
 

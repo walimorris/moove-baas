@@ -9,8 +9,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.moove.api.queries.CattleDeviceIdQueries.putHerdMetaDataLimits;
 import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
