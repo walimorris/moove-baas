@@ -13,7 +13,7 @@ import static com.moove.api.utils.DynamoUtils.*;
 public class GeofenceExitEvent {
     private static final String HERD_ID = "PK";
     private static final String DEVICE_ID = "GSI1PK";
-    private static final String DATE_TIME = "SK";
+    private static final String DATE_TIME = "GSI1SK";
     private static final String STATUS = "status";
     private static final String LATITUDE = "latitude";
     private static final String LONGITUDE = "longitude";
@@ -45,12 +45,11 @@ public class GeofenceExitEvent {
             String herdId = stripDecor(String.valueOf(newRecordKeys.get((HERD_ID))));
             String deviceId = stripDecor(String.valueOf(newRecordKeys.get(DEVICE_ID)));
 
-            String date = stripDecor(stripDateTimeSortKeyForDate(String.valueOf(
-                    newRecordKeys.get(DATE_TIME)
-            )));
-            String time = stripDecor(stripDateTimeSortKeyForTime(String.valueOf(
-                    newRecordKeys.get(DATE_TIME)
-            )));
+            String strippedDateTime = stripDecor(String.valueOf(newRecordKeys.get(DATE_TIME)));
+
+            String date = stripDateTimeGSISortKey(strippedDateTime, "date");
+            String time = stripDateTimeGSISortKey(strippedDateTime, "time");
+
             String newStatus = stripDecor(String.valueOf(newRecordKeys.get(STATUS)));
             String latitude = stripDecor(String.valueOf(newRecordKeys.get(LATITUDE)));
             String longitude = stripDecor(String.valueOf(newRecordKeys.get(LONGITUDE)));
@@ -87,7 +86,7 @@ public class GeofenceExitEvent {
         message.append(String.format("Alert for herd: %s\n", herdId))
                 .append(String.format("Cattle DeviceId: %s\n", deviceId))
                 .append(String.format("Latitude: %s\n", latitude))
-                .append(String.format("Longitude: %s", longitude));
+                .append(String.format("Longitude: %s\n", longitude));
 
         if (status.equals("out")) {
             message.append("Status: has exited geofence area\n");
@@ -95,7 +94,7 @@ public class GeofenceExitEvent {
             message.append("Status: has entered geofence area\n");
         }
         message.append(String.format("@date %s\n", date))
-                .append(String.format("@time %s", time));
+                .append(String.format("@time %s\n", time));
 
         return message.toString();
     }

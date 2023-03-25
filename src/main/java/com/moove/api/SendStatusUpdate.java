@@ -7,7 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import org.json.JSONObject;
 
-import static com.moove.api.queries.CattleDeviceIdQueries.updateDeviceItem;
+import static com.moove.api.queries.CattleDeviceIdQueries.updateDeviceItemStatusAttribute;
 import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
 
 public class SendStatusUpdate {
@@ -30,17 +30,32 @@ public class SendStatusUpdate {
         return response;
     }
 
+    /**
+     * Collect status attribute from JSON String.
+     *
+     * @param statusJSON status value from request body
+     * @param logger {@link LambdaLogger}
+     *
+     * @return {@link String}
+     */
     private static String collectStatus(String statusJSON, LambdaLogger logger) {
         JSONObject statusJson = new JSONObject(statusJSON);
         return String.valueOf(statusJson.get("status"));
     }
 
+    /**
+     * Save UpdateItem request on table with new status attribute value.
+     *
+     * @param event {@link APIGatewayV2HTTPEvent}
+     * @param amazonDynamoDB {@link AmazonDynamoDB}
+     * @param logger {@link LambdaLogger}
+     */
     private static void loadStatusChange(APIGatewayV2HTTPEvent event, AmazonDynamoDB amazonDynamoDB, LambdaLogger logger) {
         String status = collectStatus(event.getBody(), logger);
         String herdId = event.getQueryStringParameters().get("pk");
         String SK = event.getQueryStringParameters().get("sk");
         if (herdId != null && SK != null) {
-            boolean isStatusUpdated = updateDeviceItem(amazonDynamoDB, logger, herdId, SK, status);
+            boolean isStatusUpdated = updateDeviceItemStatusAttribute(amazonDynamoDB, logger, herdId, SK, status);
             if (isStatusUpdated) {
                 logger.log("Status updated to " + status + " in herdId: " + herdId + " deviceId SK: " + SK);
             } else {

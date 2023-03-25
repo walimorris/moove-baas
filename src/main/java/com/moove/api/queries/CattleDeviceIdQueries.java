@@ -80,7 +80,20 @@ public class CattleDeviceIdQueries {
         return true;
     }
 
-    public static boolean updateDeviceItem(AmazonDynamoDB amazonDynamoDB, LambdaLogger logger, String pk, String sk, String status) {
+    /**
+     * Update device item status attribute and ignores all other null attributes not passed.
+     *
+     * @param amazonDynamoDB {@link AmazonDynamoDB}
+     * @param logger {@link LambdaLogger}
+     * @param pk partition key
+     * @param sk sort key
+     * @param status status value
+     *
+     * @return boolean
+     * @see DynamoUtils#getSkipUpdateNullAttributesMapperConfig()
+     * @see Device
+     */
+    public static boolean updateDeviceItemStatusAttribute(AmazonDynamoDB amazonDynamoDB, LambdaLogger logger, String pk, String sk, String status) {
         Device deviceItem = new Device();
         deviceItem.setHerdId(pk);
         deviceItem.setDeviceId(sk);

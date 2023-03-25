@@ -140,28 +140,25 @@ public class DynamoUtils {
     }
 
     /**
-     * Removes decor around returned dynamodb attribute values from table sort key
-     * and pulls the date. Sort Key Format Like: 2023-03-22T22:47:36#123456
+     * Removes decor around returned dynamodb attribute values from table sort key and
+     * pulls the date or time. GSI Sort Key Format Like: 2023-03-22T22:47:36#123456
      *
      * @param key sort key from {@link Device} table.
+     * @param property the property to strip from key: 'date' or 'time'
      *
      * @return {@link String}
-     * @see Device#getDeviceId()
-     */
-    public static String stripDateTimeSortKeyForDate(String key) {
-        return key.split("T")[0].trim();
-    }
-
-    /**
-     * Removes decor around returned dynamodb attribute values from table sort key
-     * and pulls the time. Sort Key Format Like: 2023-03-22T22:47:36#123456
      *
-     * @param key sort key from {@link Device} table
-     *
-     * @return {@link String}
      * @see Device#getDeviceId()
+     * @throws IllegalArgumentException given property other than 'date' or 'time'
      */
-    public static String stripDateTimeSortKeyForTime(String key) {
-        return key.split("T")[1].split("#")[0].trim();
+    public static String stripDateTimeGSISortKey(String key, String property) {
+        if (!(property.equals("date") || (property.equals("time")))) {
+            throw new IllegalArgumentException("property can be one of 'date' or 'time' option");
+        }
+        if (property.equals("date")) {
+            return key.split("T")[0];
+        } else {
+            return key.split("T")[1];
+        }
     }
 }
