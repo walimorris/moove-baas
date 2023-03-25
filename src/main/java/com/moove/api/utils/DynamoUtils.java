@@ -1,5 +1,7 @@
 package com.moove.api.utils;
 
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.moove.api.models.Device;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -46,6 +48,12 @@ public class DynamoUtils {
         return AmazonDynamoDBClientBuilder.standard()
                 .withRegion(region)
                 .withClientConfiguration(dynamoClientConfiguration())
+                .build();
+    }
+
+    public static AmazonSNS getAmazonSNSClient(String region) {
+        return AmazonSNSClientBuilder.standard()
+                .withRegion(region)
                 .build();
     }
 

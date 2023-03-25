@@ -16,7 +16,6 @@ import static com.moove.api.utils.DynamoUtils.getAmazonDynamoDBClient;
 import static com.moove.api.utils.DynamoUtils.getTTL;
 
 public class SendLocation {
-
     private static final String REGION = System.getenv("region");
 
     public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent event, Context context) {

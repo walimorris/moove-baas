@@ -71,6 +71,10 @@
             <artifactId>aws-java-sdk-location</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sns</artifactId>
+        </dependency>
+        <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>location</artifactId>
         </dependency>
