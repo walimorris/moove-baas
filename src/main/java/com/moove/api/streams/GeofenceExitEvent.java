@@ -36,6 +36,10 @@ public class GeofenceExitEvent {
         for (DynamodbStreamRecord record : event.getRecords()) {
             Map<String, AttributeValue> newRecordKeys = record.getDynamodb().getNewImage();
             Map<String, AttributeValue> oldRecordKeys = record.getDynamodb().getOldImage();
+            logger.log(event.toString());
+            logger.log(newRecordKeys.toString());
+            logger.log(oldRecordKeys.toString());
+            logger.log(String.valueOf(newRecordKeys.get(DEVICE_ID)));
 
             // new properties of value
             String herdId = stripDecor(String.valueOf(newRecordKeys.get((HERD_ID))));

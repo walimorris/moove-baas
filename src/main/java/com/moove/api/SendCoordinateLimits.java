@@ -29,7 +29,6 @@ public class SendCoordinateLimits {
 
         APIGatewayV2HTTPResponse response = new APIGatewayV2HTTPResponse();
         response.setStatusCode(200);
-
         return response;
     }
 

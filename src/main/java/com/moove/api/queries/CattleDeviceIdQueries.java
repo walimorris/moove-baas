@@ -80,6 +80,24 @@ public class CattleDeviceIdQueries {
         return true;
     }
 
+    public static boolean updateDeviceItem(AmazonDynamoDB amazonDynamoDB, LambdaLogger logger, String pk, String sk, String status) {
+        Device deviceItem = new Device();
+        deviceItem.setHerdId(pk);
+        deviceItem.setDeviceId(sk);
+        deviceItem.setStatus(status);
+
+        DynamoDBMapper mapper = new DynamoDBMapper(amazonDynamoDB);
+
+        try {
+            mapper.save(deviceItem, getSkipUpdateNullAttributesMapperConfig());
+        } catch (Exception e) {
+            logger.log("Error on Cattle Table UpdateItem with herdId PK: " + pk + " deviceId SK: " +
+                    sk + ", " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
     /**
      * PutItem request on herd meta-data item for the metaDataLimits attribute that contains
      * a list of coordinates for geofence polygon.
