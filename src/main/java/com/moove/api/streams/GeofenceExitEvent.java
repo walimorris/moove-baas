@@ -5,6 +5,9 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent.DynamodbStreamRecord;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
 
 import java.util.Map;
 
@@ -17,6 +20,9 @@ public class GeofenceExitEvent {
     private static final String STATUS = "status";
     private static final String LATITUDE = "latitude";
     private static final String LONGITUDE = "longitude";
+
+    private static final String REGION = System.getenv("region");
+    private static final String SNS_TOPIC_ARN = System.getenv("sns_topic_arn");
 
     public String handleRequest(DynamodbEvent event, Context context) {
         LambdaLogger logger = context.getLogger();
@@ -60,8 +66,10 @@ public class GeofenceExitEvent {
             // only trigger event if status has been updated, otherwise we don't want to trigger event
             // due to a different attribute change
             if (!newStatus.equals(oldStatus)) {
-                String message = createMessage(herdId, deviceId, date, time, latitude, longitude, newStatus);
-                logger.log(message);
+                if (newStatus.equals("out")) {
+                    String message = createMessage(herdId, deviceId, date, time, latitude, longitude, newStatus);
+                    publishGeofenceExitMessage(getAmazonSNSClient(REGION), logger, message);
+                }
             }
         }
     }
@@ -97,5 +105,24 @@ public class GeofenceExitEvent {
                 .append(String.format("@time %s\n", time));
 
         return message.toString();
+    }
+
+    /**
+     * Publish Geofence exit event to SNS Topic when a new status of 'out' is updated on a device
+     * in DynamoDB table.
+     *
+     * @param amazonSNS {@link AmazonSNS}
+     * @param logger {@link LambdaLogger}
+     * @param message message to publish to Topic
+     */
+    private static void publishGeofenceExitMessage(AmazonSNS amazonSNS, LambdaLogger logger, String message) {
+        PublishRequest publishRequest = new PublishRequest()
+                .withTopicArn(SNS_TOPIC_ARN)
+                .withSubject("Geofence Exit Event")
+                .withMessage(message);
+
+        PublishResult publishResult = amazonSNS.publish(publishRequest);
+        logger.log("Message with Id: " + publishResult.getMessageId() + "has status: " +
+                publishResult.getSdkHttpMetadata().getHttpStatusCode());
     }
 }

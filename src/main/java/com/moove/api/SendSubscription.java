@@ -7,10 +7,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.SubscribeRequest;
 import com.amazonaws.services.sns.model.SubscribeResult;
+import org.json.JSONObject;
 
 import static com.moove.api.utils.DynamoUtils.getAmazonSNSClient;
-
-import java.util.Base64;
 
 public class SendSubscription {
     private static final String REGION = System.getenv("region");
@@ -37,9 +36,8 @@ public class SendSubscription {
      * @return {@link String}
      */
     private static String decodeEmailAddressFromRequest(APIGatewayV2HTTPEvent event, LambdaLogger logger) {
-        byte[] decodedBytes = Base64.getDecoder().decode(event.getBody());
-        String decodedBody = new String(decodedBytes);
-        return decodedBody.split("=")[1].replace("%40", "@");
+        JSONObject emailJson = new JSONObject(event.getBody());
+        return emailJson.getString("email");
     }
 
     /**
