@@ -8,9 +8,9 @@
 <h3 align="center">moove-baas</h3>
 
   <p align="center">
-    Real time device tracking for small-mid sized device groups
+    Real time device tracking for small-mid sized device farms
     <br />
-    <a href="https://github.com/walimorris/intelli-crop-frontend"><strong>Frontend Repo Coming Soon! »</strong></a>
+    <a href="#"><strong>Frontend Repo Coming Soon! »</strong></a>
     <br />
     <br />
     ·
